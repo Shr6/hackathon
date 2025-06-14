@@ -2,6 +2,15 @@ from flask import Flask, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import random
+import serial
+import time
+from threading import Thread
+
+
+
+arduino = serial.Serial('COM4', 9600) 
+
+WATER_FREQUENCY = 0
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///leakage_data.db'
@@ -30,6 +39,22 @@ def generate_dummy_data():
             db.session.add(data)
         db.session.commit()
         print("✅ Dummy flood detection data inserted")
+
+
+
+def read_from_arduino():
+    while True:
+        if arduino.in_waiting > 0:
+            try:
+                # Read and decode data from the Arduino serial output
+                raw_data = arduino.readline().decode('utf-8', errors='ignore').strip()
+                if raw_data.isdigit():
+                    WATER_FREQUENCY = int(raw_data)
+                else:
+                    print("Invalid data from Arduino.")
+            except Exception as e:
+                print(f"Error occurred while reading from Arduino: {e}")
+        time.sleep(1)
 
 
 @app.route('/')
@@ -67,5 +92,38 @@ def latest_data():
         'timestamp': d.timestamp.isoformat()
     })
 
+
+@app.route('/api/live')
+def live_data():
+    if WATER_FREQUENCY == 0:
+        random_data = random.randint(100, 500)  # Generate random frequency
+        data = {
+            'frequency': random_data,  # Random water frequency
+            'location': random.choice(['Basement', 'Street', 'Garage', 'Backyard']),
+            'flood_detected': True if random_data > 350 else False,  # Randomly choose flood detected
+        }
+    else:
+        data = {
+            'frequency': WATER_FREQUENCY,
+            'location': 'City',
+            'flood_detected': WATER_FREQUENCY > 350,  # Flood is detected if the frequency is greater than 350
+        }
+    
+    return jsonify(data)
+
+
+@app.route('/live')
+def live():
+    return render_template("live.html")
+
+# Function to start the Arduino data reading process in a separate thread
+def start_arduino_thread():
+    arduino_thread = Thread(target=read_from_arduino)
+    arduino_thread.daemon = True  # Daemon thread will automatically close when the main program exits
+    arduino_thread.start()
+
+
+
 if __name__ == '__main__':
+    start_arduino_thread()
     app.run(debug=True)

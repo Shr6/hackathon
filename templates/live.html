@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flood Detection Live Data</title>
+    <script src="https://cdn.tailwindcss.com"></script> <!-- Tailwind CSS CDN -->
+</head>
+
+<body class="bg-gray-100 font-sans antialiased">
+
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">Live Flood Detection Data</h1>
+
+        <div class="max-w-xl mx-auto bg-white p-6 shadow-lg rounded-lg">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-medium text-gray-700">Location:</span>
+                    <span id="location" class="text-xl text-gray-900">Loading...</span>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-medium text-gray-700">Water Frequency:</span>
+                    <span id="frequency" class="text-xl text-gray-900">Loading...</span>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-medium text-gray-700">Flood Detected:</span>
+                    <span id="flood-detected" class="text-xl text-green-500">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch live data from the backend
+        function fetchLiveData() {
+            fetch('/api/live')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    
+                    document.getElementById('location').innerText = data.location;
+                    document.getElementById('frequency').innerText = data.frequency;
+                    const floodDetectedElement = document.getElementById('flood-detected');
+                    if (data.flood_detected) {
+                        floodDetectedElement.innerText = "Yes";
+                        floodDetectedElement.classList.remove('text-green-500');
+                        floodDetectedElement.classList.add('text-red-500');
+                    } else {
+                        floodDetectedElement.innerText = "No";
+                        floodDetectedElement.classList.remove('text-red-500');
+                        floodDetectedElement.classList.add('text-green-500');
+                    }
+                })
+                .catch(error => console.error('Error fetching live data:', error));
+        }
+
+        // Fetch data every 2 seconds (2000 ms)
+        setInterval(fetchLiveData, 2000);
+
+        // Initial data fetch on page load
+        fetchLiveData();
+    </script>
+
+</body>
+
+</html>
