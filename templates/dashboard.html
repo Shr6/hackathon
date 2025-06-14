@@ -65,7 +65,7 @@
             </div>
             <div>
               <p class="text-sm text-gray-500 font-medium">Total Flood Events</p>
-              <h3 id="totalFloods" class="text-2xl font-bold text-gray-800">100</h3>
+              <h3 id="totalFloods" class="text-2xl font-bold text-gray-800">{{ data|length }}</h3>
             </div>
           </div>
         </div>
@@ -81,7 +81,7 @@
             </div>
             <div>
               <p class="text-sm text-gray-500 font-medium">Active Flood Alerts</p>
-              <h3 id="activeFloods" class="text-2xl font-bold text-gray-800">No flood detected</h3>
+              <h3 id="activeFloods" class="text-xl font-bold text-gray-800">No flood detected</h3>
             </div>
           </div>
         </div>
@@ -97,7 +97,7 @@
             </div>
             <div>
               <p class="text-sm text-gray-500 font-medium">Locations Monitored</p>
-              <h3 id="locationCount" class="text-2xl font-bold text-gray-800">Street</h3>
+              <h3 id="locationCount" class="text-xl font-bold text-gray-800">Street</h3>
             </div>
           </div>
         </div>
@@ -113,7 +113,7 @@
             </div>
             <div>
               <p class="text-sm text-gray-500 font-medium">Last Flood Detection</p>
-              <h3 id="lastDetection" class="text-sm font-bold text-gray-800">Backyard</h3>
+              <h3 id="lastDetection" class="text-xl font-bold text-gray-800">Backyard</h3>
             </div>
           </div>
         </div>
@@ -256,5 +256,21 @@
     <!-- Footer -->
     {% include 'components/footer.html' %}
     <script src="{{ url_for('static', filename='/dashboard.js') }}"></script>
+
+    <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    fetch('/api/latest')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("activeFloods").textContent = data.active_flood ? "Flood Detected" : "No flood detected";
+        document.getElementById("locationCount").textContent = data.location;
+        document.getElementById("lastDetection").textContent = data.last_detection || "Backyard";
+      })
+      .catch(error => {
+        console.error("Error fetching flood data:", error);
+      });
+  });
+</script>
+
   </body>
 </html>
