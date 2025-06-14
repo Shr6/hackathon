@@ -1,18 +1,490 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SensorHub - Real-time water leakage monitoring system</title>
-   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SensorHub - Environmental Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-{% include 'components/navbar.html' %}
-{% include 'components/footer.html' %}
-</body>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      * {
+        scroll-behavior: smooth;
+      }
+
+      *::-webkit-scrollbar {
+        display: none;
+      }
+      .hero-gradient {
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+      }
+
+      .card-gradient-1 {
+        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+      }
+
+      .card-gradient-2 {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      }
+
+      .card-gradient-3 {
+        background: linear-gradient(135deg, #10b981 0%, #84cc16 100%);
+      }
+
+      .pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .fade-in {
+        opacity: 0;
+        animation: fadeIn 0.8s ease-in forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-delay-100 {
+        animation-delay: 0.1s;
+      }
+
+      .animate-delay-200 {
+        animation-delay: 0.2s;
+      }
+
+      .animate-delay-300 {
+        animation-delay: 0.3s;
+      }
+
+      .animate-delay-400 {
+        animation-delay: 0.4s;
+      }
+
+      .animate-delay-500 {
+        animation-delay: 0.5s;
+      }
+
+      .animate-spin-slow {
+        animation: spin 3s linear infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .gauge {
+        position: relative;
+        width: 120px;
+        height: 120px;
+      }
+
+      .gauge-body {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: #e5e7eb;
+        overflow: hidden;
+      }
+
+      .gauge-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform-origin: center bottom;
+        transition: transform 1s ease-out;
+      }
+
+      .gauge-cover {
+        width: 75%;
+        height: 75%;
+        background-color: white;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .loading-dots:after {
+        content: ".";
+        animation: dots 1.5s steps(5, end) infinite;
+      }
+
+      @keyframes dots {
+        0%,
+        20% {
+          content: ".";
+        }
+        40% {
+          content: "..";
+        }
+        60% {
+          content: "...";
+        }
+        80%,
+        100% {
+          content: "";
+        }
+      }
+
+      .air-quality-good {
+        color: #10b981;
+      }
+      .air-quality-moderate {
+        color: #f59e0b;
+      }
+      .air-quality-poor {
+        color: #f97316;
+      }
+      .air-quality-unhealthy {
+        color: #ef4444;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    {% include 'components/navbar.html' %}
+<!-- Hero Section -->
+<div class="hero-gradient text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+    <div class="grid md:grid-cols-2 gap-8 items-center">
+      <div class="fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          Real-time Water Leakage Monitoring
+        </h1>
+        <p class="text-xl text-blue-100 mb-8">
+          Detect leaks instantly and protect your property with our smart water leakage monitoring system.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a
+            href="/dashboard"
+            class="bg-white text-indigo-600 hover:bg-gray-100 px-6 py-3 rounded-lg font-medium shadow-md transition-colors duration-300"
+          >
+            View Dashboard
+          </a>
+          <a
+            href="#live-data"
+            class="bg-transparent border-2 border-white hover:bg-white hover:text-indigo-600 px-6 py-3 rounded-lg font-medium transition-colors duration-300"
+          >
+            See Live Data
+          </a>
+        </div>
+      </div>
+      <div class="relative flex justify-center">
+        <div
+          class="absolute w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"
+        ></div>
+        <div
+          class="absolute w-64 h-64 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"
+        ></div>
+        <div class="relative">
+          <div
+            class="bg-white p-6 rounded-2xl shadow-xl fade-in animate-delay-200"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">
+                Leak Detection Status
+              </h3>
+              <div class="flex items-center">
+                <span
+                  id="statusIndicator"
+                  class="h-2 w-2 rounded-full bg-green-500 mr-2 pulse"
+                ></span>
+                <span class="text-xs text-gray-500">Live</span>
+              </div>
+            </div>
+            <div id="loadingState" class="py-8 flex flex-col items-center">
+              <div
+                class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"
+              ></div>
+              <p class="text-gray-500 loading-dots">Fetching leak data</p>
+            </div>
+            <div id="dataState" class="hidden">
+              <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <div class="text-sm text-gray-500 mb-1">Leak Status</div>
+                <div class="flex items-center">
+                  <i class="fas fa-water text-blue-500 mr-2"></i>
+                  <span
+                    id="leakStatus"
+                    class="text-2xl font-bold text-gray-800"
+                    >--</span
+                  >
+                </div>
+              </div>
+              <div class="text-xs text-gray-500 flex justify-between items-center">
+                <span>Last updated:</span>
+                <span id="timestamp" class="font-medium">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Live Data Section -->
+<section id="live-data" class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12 fade-in">
+      <h2 class="text-3xl font-bold text-gray-900 mb-4">
+        Live Water Leakage Data
+      </h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Monitor potential leaks in real-time with our intelligent detection system.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8 mb-12">
+      <!-- Leak Status Card -->
+      <div
+        class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 fade-in animate-delay-100"
+      >
+        <div class="card-gradient-1 p-4 text-white">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Leak Status</h3>
+            <i class="fas fa-water text-2xl"></i>
+          </div>
+        </div>
+        <div class="p-6 flex flex-col items-center">
+          <div class="gauge mb-4">
+            <div class="gauge-body">
+              <div
+                id="leakGaugeFill"
+                class="gauge-fill bg-gradient-to-t from-red-600 to-orange-400"
+                style="transform: rotate(0deg)"
+              ></div>
+            </div>
+            <div class="gauge-cover">
+              <span id="leakGaugeValue" class="text-xl">--</span>
+            </div>
+          </div>
+          <div class="text-sm text-gray-500 text-center">
+            <p>Status: No Leak / Minor / Critical</p>
+            <p id="leakStatus" class="font-medium mt-2">Analyzing...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Water Flow Rate Card -->
+      <div
+        class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 fade-in animate-delay-200"
+      >
+        <div class="card-gradient-2 p-4 text-white">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Flow Rate</h3>
+            <i class="fas fa-tachometer-alt text-2xl"></i>
+          </div>
+        </div>
+        <div class="p-6 flex flex-col items-center">
+          <div class="gauge mb-4">
+            <div class="gauge-body">
+              <div
+                id="flowGaugeFill"
+                class="gauge-fill bg-gradient-to-t from-blue-600 to-cyan-400"
+                style="transform: rotate(0deg)"
+              ></div>
+            </div>
+            <div class="gauge-cover">
+              <span id="flowGaugeValue" class="text-xl">-- L/min</span>
+            </div>
+          </div>
+          <div class="text-sm text-gray-500 text-center">
+            <p>Expected range: 0 - 30 L/min</p>
+            <p id="flowStatus" class="font-medium mt-2">Analyzing...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pressure Level Card -->
+      <div
+        class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 fade-in animate-delay-300"
+      >
+        <div class="card-gradient-3 p-4 text-white">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Pipe Pressure</h3>
+            <i class="fas fa-compress-arrows-alt text-2xl"></i>
+          </div>
+        </div>
+        <div class="p-6 flex flex-col items-center">
+          <div class="gauge mb-4">
+            <div class="gauge-body">
+              <div
+                id="pressureGaugeFill"
+                class="gauge-fill bg-gradient-to-t from-green-600 to-lime-400"
+                style="transform: rotate(0deg)"
+              ></div>
+            </div>
+            <div class="gauge-cover">
+              <span id="pressureGaugeValue" class="text-xl">-- psi</span>
+            </div>
+          </div>
+          <div class="text-sm text-gray-500 text-center">
+            <p>Safe range: 40 - 60 psi</p>
+            <p id="pressureStatus" class="font-medium mt-2">Analyzing...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div
+      class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 p-6 fade-in animate-delay-400"
+    >
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        Leakage Trends
+      </h3>
+      <div class="h-80">
+        <canvas id="leakHistoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+    
+<!-- Features Section -->
+<section id="features" class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12 fade-in">
+      <h2 class="text-3xl font-bold text-gray-900 mb-4">Key Features</h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Our intelligent water leakage monitoring system helps you detect and respond to plumbing issues in real time.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <!-- Real-time Monitoring -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 fade-in animate-delay-100">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-chart-line text-indigo-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Real-time Leak Detection</h3>
+        <p class="text-gray-600">
+          Continuously monitor water flow and pressure to instantly detect leaks and irregularities.
+        </p>
+      </div>
+
+      <!-- Alerts -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 fade-in animate-delay-200">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-bell text-indigo-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Instant Alerts & Notifications</h3>
+        <p class="text-gray-600">
+          Get notified immediately via SMS or email when a potential leak is detected.
+        </p>
+      </div>
+
+      <!-- Historical Trends -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 fade-in animate-delay-300">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-history text-indigo-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Historical Water Usage</h3>
+        <p class="text-gray-600">
+          Analyze water usage and leak history to identify trends and potential problem areas.
+        </p>
+      </div>
+
+      <!-- Mobile Access -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 fade-in animate-delay-400">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-mobile-alt text-indigo-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Remote Monitoring</h3>
+        <p class="text-gray-600">
+          Access your leak detection dashboard from any device, anytime, anywhere.
+        </p>
+      </div>
+
+      <!-- Customization -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 fade-in animate-delay-500">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-cogs text-indigo-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Customizable Thresholds</h3>
+        <p class="text-gray-600">
+          Set custom sensitivity levels and flow thresholds to match your specific plumbing setup.
+        </p>
+      </div>
+
+      <!-- Data Export -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 fade-in animate-delay-500">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+          <i class="fas fa-file-export text-indigo-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Data Export & Reports</h3>
+        <p class="text-gray-600">
+          Export leak logs and water usage data for further analysis or compliance reporting.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+    <!-- Call to Action -->
+<section class="py-16 bg-indigo-600 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-3xl font-bold mb-4 fade-in">
+      Concerned about water leaks?
+    </h2>
+    <p
+      class="text-xl text-indigo-100 mb-8 max-w-3xl mx-auto fade-in animate-delay-100"
+    >
+      Take control with our advanced water leakage monitoring system and prevent costly damage before it happens.
+    </p>
+    <a
+      href="/dashboard"
+      class="inline-block bg-white text-indigo-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-medium shadow-lg transition-colors duration-300 fade-in animate-delay-200"
+    >
+      View Leak Dashboard
+    </a>
+  </div>
+</section>
+
+
+    <!-- Footer -->
+    {% include 'components/footer.html' %}
+
+    <script src="{{ url_for('static', filename='/index.js') }}"></script>
+  </body>
 </html>

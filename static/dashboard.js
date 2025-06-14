@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async function () {
   const TESTING_URI = "http://127.0.0.1:5000";
 
-  // Show loading overlay for 1.5s
+  // Show loading overlay
   setTimeout(() => {
     document.getElementById("loadingOverlay").style.opacity = "0";
     document.getElementById("content").style.opacity = "1";
@@ -12,17 +12,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   // Set current date
   const now = new Date();
-  document.getElementById("currentDate").textContent = now.toLocaleDateString(
-    "en-US",
-    {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
-  );
+  document.getElementById("currentDate").textContent = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-  // Fetch data from API
+  // Fetch data
   let data = [];
   try {
     const res = await fetch(TESTING_URI + "/api/all");
@@ -38,108 +35,91 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   // Calculate averages
-  const avgTemp =
-    data.reduce((sum, item) => sum + item.temperature, 0) / data.length;
-  const avgHumidity =
-    data.reduce((sum, item) => sum + item.humidity, 0) / data.length;
+  const avgFlow =
+    data.reduce((sum, item) => sum + item.flow_rate, 0) / data.length;
+  const avgPressure =
+    data.reduce((sum, item) => sum + item.pipe_pressure, 0) / data.length;
 
-  // Count air quality occurrences
-  const airQualityCounts = data.reduce((acc, item) => {
-    acc[item.air_quality] = (acc[item.air_quality] || 0) + 1;
+  // Most common leak status
+  const leakCounts = data.reduce((acc, item) => {
+    acc[item.leak_status] = (acc[item.leak_status] || 0) + 1;
     return acc;
   }, {});
 
-  // Find most common air quality
-  let mostCommonAirQuality = "Good";
-  let maxCount = 0;
-  for (const [quality, count] of Object.entries(airQualityCounts)) {
-    if (count > maxCount) {
-      maxCount = count;
-      mostCommonAirQuality = quality;
+  let mostCommonLeakStatus = "None";
+  let maxLeakCount = 0;
+  for (const [status, count] of Object.entries(leakCounts)) {
+    if (count > maxLeakCount) {
+      maxLeakCount = count;
+      mostCommonLeakStatus = status;
     }
   }
 
-  // Update UI with calculated values
-  document.getElementById("avgTemp").textContent = avgTemp.toFixed(1) + "°C";
-  document.getElementById("avgHumidity").textContent =
-    avgHumidity.toFixed(1) + "%";
-  document.getElementById("airQualityStatus").textContent =
-    mostCommonAirQuality;
+  // Update UI
+  document.getElementById("avgFlowRate").textContent = avgFlow.toFixed(1) + " L/min";
+  document.getElementById("avgPressure").textContent = avgPressure.toFixed(1) + " psi";
+  document.getElementById("leakStatus").textContent = mostCommonLeakStatus;
   document.getElementById("sensorCount").textContent = data.length;
-  document.getElementById("lastUpdate").textContent =
-    new Date().toLocaleTimeString();
+  document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
 
-  // Update progress bars with animation
+  // Update progress bars
   setTimeout(() => {
-    document.getElementById("tempBar").style.width = (avgTemp / 40) * 100 + "%";
-    document.getElementById("humidityBar").style.width = avgHumidity + "%";
+    document.getElementById("flowBar").style.width = (avgFlow / 30) * 100 + "%";
+    document.getElementById("pressureBar").style.width = (avgPressure / 100) * 100 + "%";
 
-    // Set air quality bar
-    const airQualityMap = {
-      Good: 25,
-      Moderate: 50,
-      Poor: 75,
-      Unhealthy: 100,
+    // Leak bar status
+    const leakLevelMap = {
+      None: 20,
+      Minor: 60,
+      Critical: 100,
     };
-    document.getElementById("airQualityBar").style.width =
-      airQualityMap["Poor"] + "%";
+    const leakColorMap = {
+      None: "bg-green-500",
+      Minor: "bg-yellow-500",
+      Critical: "bg-red-500",
+    };
 
-    // Set air quality bar color
-    const airQualityColorMap = {
-      Good: "bg-green-500",
-      Moderate: "bg-yellow-500",
-      Poor: "bg-orange-500",
-      Unhealthy: "bg-red-500",
-    };
-    document.getElementById("airQualityBar").className =
-      "h-full rounded-full " + airQualityColorMap[mostCommonAirQuality];
+    const leakBar = document.getElementById("leakBar");
+    leakBar.style.width = leakLevelMap[mostCommonLeakStatus] + "%";
+    leakBar.className = "h-full rounded-full " + leakColorMap[mostCommonLeakStatus];
   }, 1000);
 
-  // Refresh button functionality
+  // Refresh button
   document.getElementById("refreshBtn").addEventListener("click", function () {
-    const btn = this;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Refreshing...';
-
-    setTimeout(() => {
-      location.reload();
-    }, 1000);
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Refreshing...';
+    setTimeout(() => location.reload(), 1000);
   });
 
+  // Chart labels and data
   const labels = data.map((entry) => {
     const time = new Date(entry.timestamp);
-    return (
-      time.getHours().toString().padStart(2, "0") +
-      ":" +
-      time.getMinutes().toString().padStart(2, "0")
-    );
+    return time.getHours().toString().padStart(2, "0") + ":" +
+           time.getMinutes().toString().padStart(2, "0");
   });
-  const tempData = data.map((entry) => entry.temperature.toFixed(1));
-  const humidityData = data.map((entry) => entry.humidity.toFixed(1));
 
-  // Render Temperature Chart
-  const tempCtx = document.getElementById("temperatureChart").getContext("2d");
-  new Chart(tempCtx, {
+  const flowData = data.map((entry) => entry.flow_rate.toFixed(1));
+  const pressureData = data.map((entry) => entry.pipe_pressure.toFixed(1));
+
+  // Flow Rate Chart
+  const flowCtx = document.getElementById("flowChart").getContext("2d");
+  new Chart(flowCtx, {
     type: "line",
     data: {
       labels: labels,
-      datasets: [
-        {
-          label: "Temperature (°C)",
-          data: tempData,
-          borderColor: "rgb(239, 68, 68)",
-          backgroundColor: "rgba(239, 68, 68, 0.1)",
-          fill: true,
-          tension: 0.4,
-        },
-      ],
+      datasets: [{
+        label: "Flow Rate (L/min)",
+        data: flowData,
+        borderColor: "rgb(59, 130, 246)",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        fill: true,
+        tension: 0.4,
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true },
-      },
+      plugins: { legend: { display: true } },
       scales: {
         y: {
           beginAtZero: true,
@@ -149,29 +129,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     },
   });
 
-  // Render Humidity Chart
-  const humidityCtx = document.getElementById("humidityChart").getContext("2d");
-  new Chart(humidityCtx, {
+  // Pressure Chart
+  const pressureCtx = document.getElementById("pressureChart").getContext("2d");
+  new Chart(pressureCtx, {
     type: "line",
     data: {
       labels: labels,
-      datasets: [
-        {
-          label: "Humidity (%)",
-          data: humidityData,
-          borderColor: "rgb(59, 130, 246)",
-          backgroundColor: "rgba(59, 130, 246, 0.1)",
-          fill: true,
-          tension: 0.4,
-        },
-      ],
+      datasets: [{
+        label: "Pipe Pressure (psi)",
+        data: pressureData,
+        borderColor: "rgb(34, 197, 94)",
+        backgroundColor: "rgba(34, 197, 94, 0.1)",
+        fill: true,
+        tension: 0.4,
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true },
-      },
+      plugins: { legend: { display: true } },
       scales: {
         y: {
           beginAtZero: true,
