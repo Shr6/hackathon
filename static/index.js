@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       const response = await fetch(`${API_BASE_URL}/api/latest`);
       if (!response.ok) throw new Error("Network response was not ok");
       const data = await response.json();
+      document.getElementById("leakLocation").textContent = data.location || "Unknown";
       document.getElementById("loadingState").classList.add("hidden");
       document.getElementById("dataState").classList.remove("hidden");
       updateUI(data);
@@ -44,9 +45,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   function updateUI(data) {
-    console.log(data);
-    
-    // Leak Status
     document.getElementById("leakStatus").textContent = data.leak_detected ? "Critical" : "No Leak";
     updateGauge("leakGaugeFill", "leakGaugeValue", data.leak_detected ? 1 : 0, 1, "");
     // Flow Rate
