@@ -19,96 +19,104 @@ document.addEventListener("DOMContentLoaded", async function () {
     day: "numeric",
   });
 
-  // Fetch leak data from API
-  let leakData = [];
+  // Fetch flood data from API
+  let floodData = [];
   try {
-    const response = await fetch(API_BASE_URI + "/api/all");
-    leakData = await response.json();
+    const response = await fetch(API_BASE_URI + "/api/flood_data"); // Adjusted API endpoint for flood data
+    floodData = await response.json();
   } catch (error) {
-    console.error("Failed to fetch sensor data:", error.message);
+    console.error("Failed to fetch flood data:", error.message);
     return;
   }
 
-  if (!leakData.length) {
-    console.warn("No leak data received from API");
+  if (!floodData.length) {
+    console.warn("No flood data received from API");
     return;
   }
 
-  // Calculate average flow rate and pipe pressure
-  const avgFlowRate =
-    leakData.reduce((sum, item) => sum + item.flow_rate, 0) / leakData.length;
-  const avgPipePressure =
-    leakData.reduce((sum, item) => sum + item.pipe_pressure, 0) / leakData.length;
-
-  // Determine most frequent leak status
-  const leakStatusCounts = leakData.reduce((acc, item) => {
-    acc[item.leak_status] = (acc[item.leak_status] || 0) + 1;
-    return acc;
-  }, {});
-
-  let dominantLeakStatus = "None";
-  let highestCount = 0;
-  for (const [status, count] of Object.entries(leakStatusCounts)) {
-    if (count > highestCount) {
-      highestCount = count;
-      dominantLeakStatus = status;
-    }
-  }
+  // Calculate stats for the dashboard
+  const totalFloods = floodData.filter(item => item.flood_detected).length;
+  const activeFloods = floodData.filter(item => item.flood_alert).length;
+  const locationsMonitored = new Set(floodData.map(item => item.location)).size;
+  const lastDetection = floodData[floodData.length - 1]?.timestamp || "N/A";
 
   // Update dashboard stats
-  document.getElementById("avgFlowRate").textContent = avgFlowRate.toFixed(1) + " L/min";
-  document.getElementById("avgPressure").textContent = avgPipePressure.toFixed(1) + " psi";
-  document.getElementById("leakStatus").textContent = dominantLeakStatus;
-  document.getElementById("sensorCount").textContent = leakData.length;
-  document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
+  document.getElementById("totalFloods").textContent = totalFloods;
+  document.getElementById("activeFloods").textContent = activeFloods;
+  document.getElementById("locationCount").textContent = locationsMonitored;
+  document.getElementById("lastDetection").textContent = lastDetection;
 
-  // Update progress bars with animation
-  setTimeout(() => {
-    document.getElementById("flowBar").style.width = (avgFlowRate / 30) * 100 + "%";
-    document.getElementById("pressureBar").style.width = (avgPipePressure / 100) * 100 + "%";
+  // Prepare data for the flood records table
+  const tableBody = document.getElementById("floodTableBody");
+  floodData.forEach(entry => {
+    const row = document.createElement("tr");
+    row.classList.add("hover:bg-gray-50", "transition-colors", "duration-150");
 
-    const leakLevelMap = {
-      None: 20,
-      Minor: 60,
-      Critical: 100,
-    };
-    const leakColorMap = {
-      None: "bg-green-500",
-      Minor: "bg-yellow-500",
-      Critical: "bg-red-500",
-    };
+    const idCell = document.createElement("td");
+    idCell.classList.add("px-6", "py-4", "whitespace-nowrap", "text-sm", "font-medium", "text-gray-900");
+    idCell.textContent = entry.id;
+    row.appendChild(idCell);
 
-    const leakBar = document.getElementById("leakBar");
-    leakBar.style.width = leakLevelMap[dominantLeakStatus] + "%";
-    leakBar.className = "h-full rounded-full " + leakColorMap[dominantLeakStatus];
-  }, 1000);
+    const locationCell = document.createElement("td");
+    locationCell.classList.add("px-6", "py-4", "whitespace-nowrap", "text-sm", "text-gray-700");
+    locationCell.textContent = entry.location;
+    row.appendChild(locationCell);
 
-  // Refresh button handler
-  document.getElementById("refreshBtn").addEventListener("click", function () {
-    this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Refreshing...';
-    setTimeout(() => location.reload(), 1000);
+    const statusCell = document.createElement("td");
+    statusCell.classList.add("px-6", "py-4", "whitespace-nowrap", "text-sm");
+    const statusSpan = document.createElement("span");
+    statusSpan.classList.add("inline-flex", "items-center", "px-2", "py-1", "rounded", "text-xs", "font-semibold");
+    if (entry.flood_detected) {
+      statusSpan.classList.add("bg-blue-100", "text-blue-800");
+      statusSpan.textContent = "Flood Detected";
+    } else {
+      statusSpan.classList.add("bg-green-100", "text-green-800");
+      statusSpan.textContent = "No Flood";
+    }
+    statusCell.appendChild(statusSpan);
+    row.appendChild(statusCell);
+
+    const timestampCell = document.createElement("td");
+    timestampCell.classList.add("px-6", "py-4", "whitespace-nowrap", "text-sm", "text-gray-500");
+    timestampCell.textContent = new Date(entry.timestamp).toLocaleString();
+    row.appendChild(timestampCell);
+
+    const actionsCell = document.createElement("td");
+    actionsCell.classList.add("px-6", "py-4", "whitespace-nowrap", "text-sm", "text-gray-500");
+    const viewBtn = document.createElement("button");
+    viewBtn.classList.add("text-blue-600", "hover:text-blue-800");
+    viewBtn.setAttribute("title", "View Details");
+    viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+    actionsCell.appendChild(viewBtn);
+
+    const downloadBtn = document.createElement("button");
+    downloadBtn.classList.add("text-gray-600", "hover:text-gray-800");
+    downloadBtn.setAttribute("title", "Download");
+    downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+    actionsCell.appendChild(downloadBtn);
+
+    row.appendChild(actionsCell);
+
+    tableBody.appendChild(row);
   });
 
-  // Prepare data labels for charts
-  const labels = leakData.map((entry) => {
+  // Initialize Flood History Chart
+  const labels = floodData.map(entry => {
     const time = new Date(entry.timestamp);
     return time.getHours().toString().padStart(2, "0") + ":" +
            time.getMinutes().toString().padStart(2, "0");
   });
 
-  const flowRates = leakData.map((entry) => entry.flow_rate.toFixed(1));
-  const pipePressures = leakData.map((entry) => entry.pipe_pressure.toFixed(1));
+  const floodStatusData = floodData.map(entry => entry.flood_detected ? 1 : 0);
 
-  // Initialize Flow Rate Chart
-  const flowCtx = document.getElementById("flowChart").getContext("2d");
-  new Chart(flowCtx, {
+  const ctx = document.getElementById("floodHistoryChart").getContext("2d");
+  new Chart(ctx, {
     type: "line",
     data: {
       labels: labels,
       datasets: [{
-        label: "Flow Rate (L/min)",
-        data: flowRates,
+        label: "Flood Detection (1 = Detected, 0 = Not Detected)",
+        data: floodStatusData,
         borderColor: "rgb(59, 130, 246)",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
         fill: true,
@@ -122,37 +130,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       scales: {
         y: {
           beginAtZero: true,
-          suggestedMax: 40,
+          suggestedMax: 1,
         },
       },
     },
   });
 
-  // Initialize Pressure Chart
-  const pressureCtx = document.getElementById("pressureChart").getContext("2d");
-  new Chart(pressureCtx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Pipe Pressure (psi)",
-        data: pipePressures,
-        borderColor: "rgb(34, 197, 94)",
-        backgroundColor: "rgba(34, 197, 94, 0.1)",
-        fill: true,
-        tension: 0.4,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: true } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          suggestedMax: 100,
-        },
-      },
-    },
+  // Refresh button handler
+  document.getElementById("refreshFloodBtn").addEventListener("click", function () {
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Refreshing...';
+    setTimeout(() => location.reload(), 1000);
   });
 });
