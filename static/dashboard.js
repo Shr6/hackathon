@@ -144,10 +144,5 @@ document.addEventListener("DOMContentLoaded", async function () {
     },
   });
 
-  // Refresh button handler
-  document.getElementById("refreshFloodBtn").addEventListener("click", function () {
-    this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Refreshing...';
-    setTimeout(() => location.reload(), 1000);
-  });
+
 });
