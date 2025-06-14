@@ -34,35 +34,37 @@
     </div>
 
     <script>
-        // Function to fetch live data from the backend
-        function fetchLiveData() {
-            fetch('/api/live')
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                    
-                    document.getElementById('location').innerText = data.location;
-                    document.getElementById('frequency').innerText = data.frequency;
-                    const floodDetectedElement = document.getElementById('flood-detected');
-                    if (data.flood_detected) {
-                        floodDetectedElement.innerText = "Yes";
-                        floodDetectedElement.classList.remove('text-green-500');
-                        floodDetectedElement.classList.add('text-red-500');
-                    } else {
-                        floodDetectedElement.innerText = "No";
-                        floodDetectedElement.classList.remove('text-red-500');
-                        floodDetectedElement.classList.add('text-green-500');
-                    }
-                })
-                .catch(error => console.error('Error fetching live data:', error));
-        }
+    function fetchLatestData() {
+        fetch('/api/latest')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.warn(data.error);
+                    return;
+                }
 
-        // Fetch data every 2 seconds (2000 ms)
-        setInterval(fetchLiveData, 2000);
+                document.getElementById('location').innerText = data.location;
+                document.getElementById('frequency').innerText = data.sensor_value;
 
-        // Initial data fetch on page load
-        fetchLiveData();
-    </script>
+                const floodDetectedElement = document.getElementById('flood-detected');
+                if (data.flood_detected) {
+                    floodDetectedElement.innerText = "Yes";
+                    floodDetectedElement.classList.remove('text-green-500');
+                    floodDetectedElement.classList.add('text-red-500');
+                } else {
+                    floodDetectedElement.innerText = "No";
+                    floodDetectedElement.classList.remove('text-red-500');
+                    floodDetectedElement.classList.add('text-green-500');
+                }
+            })
+            .catch(error => console.error('Error fetching latest data:', error));
+    }
+
+    // Fetch every 1500ms
+    setInterval(fetchLatestData, 1500);
+    fetchLatestData(); // Initial fetch
+</script>
+
 
 </body>
 

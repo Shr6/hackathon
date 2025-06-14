@@ -398,5 +398,15 @@
     {% include 'components/footer.html' %}
 
     <script src="{{ url_for('static', filename='/index.js') }}"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const timestampElement = document.getElementById("timestamp");
+        timestampElement.innerText = new Date().toLocaleTimeString();
+
+        setInterval(() => {
+          timestampElement.innerText = new Date().toLocaleTimeString();
+        }, 1000); // Update every minute
+      });
+    </script>
   </body>
 </html>

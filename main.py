@@ -8,7 +8,6 @@ from threading import Thread
 
 
 
-
 WATER_FREQUENCY = 0
 
 app = Flask(__name__)
@@ -18,9 +17,12 @@ db = SQLAlchemy(app)
 
 class FloodData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    location = db.Column(db.String(50))
-    flood_detected = db.Column(db.Boolean)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    location = db.Column(db.String(100))
+    flood_detected = db.Column(db.Boolean)
+    sensor_value = db.Column(db.Integer)  # <-- Add this line
+
+
 
 
 def generate_dummy_data():
@@ -28,33 +30,23 @@ def generate_dummy_data():
         now = datetime.now()
         timestamps = [now - timedelta(minutes=i*5) for i in range(100)]
         locations = ['Basement', 'Street', 'Garage', 'Backyard']
+        WATER_THRESHOLD = 350
 
         for i in range(100):
+            flood_detected = random.choice([True, False, False, False])
+            sensor_value = random.randint(WATER_THRESHOLD + 1, 700) if flood_detected else random.randint(100, WATER_THRESHOLD - 1)
+
             data = FloodData(
                 location=random.choice(locations),
-                flood_detected=random.choice([True, False, False, False]),
+                flood_detected=flood_detected,
+                sensor_value=sensor_value,
                 timestamp=timestamps[i]
             )
             db.session.add(data)
+
         db.session.commit()
         print("✅ Dummy flood detection data inserted")
 
-
-
-# def read_from_arduino():
-#     arduino = serial.Serial('COM4', 9600) 
-#     while True:
-#         if arduino.in_waiting > 0:
-#             try:
-#                 # Read and decode data from the Arduino serial output
-#                 raw_data = arduino.readline().decode('utf-8', errors='ignore').strip()
-#                 if raw_data.isdigit():
-#                     WATER_FREQUENCY = int(raw_data)
-#                 else:
-#                     print("Invalid data from Arduino.")
-#             except Exception as e:
-#                 print(f"Error occurred while reading from Arduino: {e}")
-#         time.sleep(1)
 
 
 @app.route('/')
@@ -81,16 +73,19 @@ def all_data():
 
 
 @app.route('/api/latest')
-def latest_data():
-    d = FloodData.query.order_by(FloodData.id.desc()).first()
-    if not d:
-        return jsonify({'error': 'No data available'})
-    return jsonify({
-        'id': d.id,
-        'location': d.location,
-        'flood_detected': d.flood_detected,  # Changed from 'leak_detected' to 'flood_detected'
-        'timestamp': d.timestamp.isoformat()
-    })
+def get_latest_data():
+    latest_data = FloodData.query.order_by(FloodData.timestamp.asc()).first()
+
+    if latest_data:
+        return jsonify({
+            'id': latest_data.id,
+            'timestamp': latest_data.timestamp.isoformat(),
+            'location': latest_data.location,
+            'flood_detected': latest_data.flood_detected,
+            'sensor_value': latest_data.sensor_value
+        })
+    else:
+        return jsonify({'error': 'No data found'}), 404
 
 
 @app.route('/api/live')
@@ -118,13 +113,9 @@ def live():
 
 # Function to start the Arduino data reading process in a separate thread
 def start_arduino_thread():
-    # arduino_thread = Thread(target=read_from_arduino)
-    # arduino_thread.daemon = True  # Daemon thread will automatically close when the main program exits
-    # arduino_thread.start()
     pass
 
 
 
 if __name__ == '__main__':
-    # start_arduino_thread()
     app.run(debug=True)
