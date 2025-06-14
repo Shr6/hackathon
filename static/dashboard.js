@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Fetch flood data from API
   let floodData = [];
   try {
-    const response = await fetch(API_BASE_URI + "/api/flood_data"); // Adjusted API endpoint for flood data
+    const response = await fetch(API_BASE_URI + "/api/all"); // Adjusted API endpoint for flood data
     floodData = await response.json();
   } catch (error) {
     console.error("Failed to fetch flood data:", error.message);
@@ -34,17 +34,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
-  // Calculate stats for the dashboard
-  const totalFloods = floodData.filter(item => item.flood_detected).length;
-  const activeFloods = floodData.filter(item => item.flood_alert).length;
-  const locationsMonitored = new Set(floodData.map(item => item.location)).size;
-  const lastDetection = floodData[floodData.length - 1]?.timestamp || "N/A";
 
-  // Update dashboard stats
+  // Calculate total flood events
+  const totalFloods = floodData.length;
+
+  // Calculate active flood alerts (assuming each alert has a boolean 'active' field)
+  const activeFloods = floodData.filter(flood => flood.active).length;
+
+  // Count unique locations monitored (assuming each flood record has a 'location' field)
+  const locationsMonitored = new Set(floodData.map(flood => flood.location)).size;
+
+  // Find the latest flood detection timestamp
+  const lastDetection = new Date(Math.max(...floodData.map(flood => new Date(flood.timestamp))));s
+
+
+  // Update dashboard stats with fetched data
   document.getElementById("totalFloods").textContent = totalFloods;
   document.getElementById("activeFloods").textContent = activeFloods;
   document.getElementById("locationCount").textContent = locationsMonitored;
-  document.getElementById("lastDetection").textContent = lastDetection;
+  document.getElementById("lastDetection").textContent = lastDetection.toLocaleString();
 
   // Prepare data for the flood records table
   const tableBody = document.getElementById("floodTableBody");
