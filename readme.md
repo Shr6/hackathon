@@ -32,10 +32,6 @@ This project is designed to **monitor potential flood risks in real time** using
 
 ---
 
-## 🧱 System Architecture
-
----
-
 ## 🔌 Arduino Setup
 
 ### Components Needed:
