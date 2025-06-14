@@ -8,7 +8,6 @@ from threading import Thread
 
 
 
-arduino = serial.Serial('COM4', 9600) 
 
 WATER_FREQUENCY = 0
 
@@ -42,19 +41,20 @@ def generate_dummy_data():
 
 
 
-def read_from_arduino():
-    while True:
-        if arduino.in_waiting > 0:
-            try:
-                # Read and decode data from the Arduino serial output
-                raw_data = arduino.readline().decode('utf-8', errors='ignore').strip()
-                if raw_data.isdigit():
-                    WATER_FREQUENCY = int(raw_data)
-                else:
-                    print("Invalid data from Arduino.")
-            except Exception as e:
-                print(f"Error occurred while reading from Arduino: {e}")
-        time.sleep(1)
+# def read_from_arduino():
+#     arduino = serial.Serial('COM4', 9600) 
+#     while True:
+#         if arduino.in_waiting > 0:
+#             try:
+#                 # Read and decode data from the Arduino serial output
+#                 raw_data = arduino.readline().decode('utf-8', errors='ignore').strip()
+#                 if raw_data.isdigit():
+#                     WATER_FREQUENCY = int(raw_data)
+#                 else:
+#                     print("Invalid data from Arduino.")
+#             except Exception as e:
+#                 print(f"Error occurred while reading from Arduino: {e}")
+#         time.sleep(1)
 
 
 @app.route('/')
@@ -118,12 +118,13 @@ def live():
 
 # Function to start the Arduino data reading process in a separate thread
 def start_arduino_thread():
-    arduino_thread = Thread(target=read_from_arduino)
-    arduino_thread.daemon = True  # Daemon thread will automatically close when the main program exits
-    arduino_thread.start()
+    # arduino_thread = Thread(target=read_from_arduino)
+    # arduino_thread.daemon = True  # Daemon thread will automatically close when the main program exits
+    # arduino_thread.start()
+    pass
 
 
 
 if __name__ == '__main__':
-    start_arduino_thread()
+    # start_arduino_thread()
     app.run(debug=True)
