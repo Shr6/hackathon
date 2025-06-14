@@ -15,37 +15,44 @@ document.addEventListener("DOMContentLoaded", async function () {
   );
   fadeElements.forEach((element) => observer.observe(element));
 
-  async function loadHistoricalData() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/all`);
-      if (!response.ok) throw new Error("Failed to fetch historical data");
-      const historyData = await response.json();
-      updateChartWithHistoricalData(historyData);
-    } catch (error) {
-      console.error("Error loading historical data:", error);
-    }
+ async function loadHistoricalData() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/all`);
+    if (!response.ok) throw new Error("Failed to fetch historical data");
+    const historyData = await response.json();
+    console.log(historyData); // Check the response here
+    updateChartWithHistoricalData(historyData);
+  } catch (error) {
+    console.error("Error loading historical data:", error);
   }
+}
+
 
   async function fetchSensorData() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/latest`);
-      if (!response.ok) throw new Error("Network response was not ok");
-      const data = await response.json();
-      document.getElementById("leakLocation").textContent = data.location || "Unknown";
-      document.getElementById("loadingState").classList.add("hidden");
-      document.getElementById("dataState").classList.remove("hidden");
-      updateUI(data);
-      setTimeout(fetchSensorData, 30000); // Update every 30 seconds
-    } catch (error) {
-      console.error("Error fetching sensor data:", error);
-      document.getElementById("statusIndicator").classList.remove("bg-green-500");
-      document.getElementById("statusIndicator").classList.add("bg-red-500");
-      setTimeout(fetchSensorData, 5000);
-    }
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/latest`);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const data = await response.json();
+    console.log(data); // Check the structure of the data
+    document.getElementById("floodLocation").textContent = data.location || "Unknown";
+    document.getElementById("floodStatus").textContent = data.flood_detected ? "Detected" : "Not detected";
+    document.getElementById("loadingState").classList.add("hidden");
+    document.getElementById("dataState").classList.remove("hidden");
+    updateUI(data);
+    setTimeout(fetchSensorData, 30000); // Update every 30 seconds
+  } catch (error) {
+    console.error("Error fetching sensor data:", error);
+    document.getElementById("statusIndicator").classList.remove("bg-green-500");
+    document.getElementById("statusIndicator").classList.add("bg-red-500");
+    setTimeout(fetchSensorData, 5000);
   }
+}
+
 
   function updateUI(data) {
-    document.getElementById("leakStatus").textContent = data.leak_detected ? "Critical" : "No Leak";
+    console.log(data);
+    
+    document.getElementById("leakStatus").textContent = data.leak_detected ? "Flood Detected" : "No Flood";
     updateGauge("leakGaugeFill", "leakGaugeValue", data.leak_detected ? 1 : 0, 1, "");
     // Flow Rate
     document.getElementById("flowGaugeValue").textContent = `${data.flow_rate} L/min`;
@@ -66,12 +73,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   function updateStatusMessages(data) {
     const leakStatus = document.getElementById("leakStatus");
     if (data.leak_detected) {
-      leakStatus.textContent = "Critical Leak";
+      leakStatus.textContent = "Critical Flood Risk";
       leakStatus.className = "font-semibold mt-2 text-red-700";
     } else {
-      leakStatus.textContent = "No Leak";
+      leakStatus.textContent = "No Flood Risk";
       leakStatus.className = "font-semibold mt-2 text-green-700";
     }
+
     // Flow Rate Status
     const flowStatus = document.getElementById("flowStatus");
     if (data.flow_rate < 10) {
@@ -84,6 +92,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       flowStatus.textContent = "High Flow";
       flowStatus.className = "font-semibold mt-2 text-green-700";
     }
+
     // Pressure Status
     const pressureStatus = document.getElementById("pressureStatus");
     if (data.pressure < 40) {
@@ -97,8 +106,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       pressureStatus.className = "font-semibold mt-2 text-green-700";
     }
   }
-
- function updateChartWithHistoricalData(dataArray) {
+function updateChartWithHistoricalData(dataArray) {
   const locationMap = {};
 
   // Group entries by location
@@ -117,16 +125,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     locationMap[entry.location].labels.push(label);
-    locationMap[entry.location].data.push(entry.leak_detected ? 1 : 0);
+    locationMap[entry.location].data.push(entry.flood_detected ? 1 : 0);
   });
 
+  // Prepare datasets for the chart
   const datasets = [];
   const colorPalette = [
-    "rgb(239, 68, 68)",
-    "rgb(59, 130, 246)",
-    "rgb(34, 197, 94)",
-    "rgb(168, 85, 247)",
-    "rgb(251, 191, 36)",
+    "rgb(239, 68, 68)",  // Red for flood
+    "rgb(59, 130, 246)", // Blue for no flood
+    "rgb(34, 197, 94)",  // Green for no flood
+    "rgb(168, 85, 247)", // Purple for no flood
+    "rgb(251, 191, 36)", // Yellow for no flood
   ];
 
   Object.keys(locationMap).forEach((location, index) => {
@@ -141,6 +150,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   });
 
+  // Get the canvas context for the chart
   const ctx = document.getElementById("leakHistoryChart").getContext("2d");
 
   if (window.sensorChart) {
@@ -174,7 +184,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             beginAtZero: true,
             ticks: {
               callback: function (value) {
-                return value === 1 ? "Leak" : "No Leak";
+                return value === 1 ? "Flood" : "No Flood";
               },
             },
           },
@@ -185,7 +195,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 }
 
 
-  // Start fetching data
   await loadHistoricalData();
   await fetchSensorData();
 });

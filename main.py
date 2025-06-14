@@ -49,10 +49,11 @@ def all_data():
         {
             'id': d.id,
             'location': d.location,
-            'leak_detected': d.leak_detected,
+            'flood_detected': d.flood_detected,
             'timestamp': d.timestamp.isoformat()
         } for d in data
     ])
+
 
 @app.route('/api/latest')
 def latest_data():
@@ -62,9 +63,8 @@ def latest_data():
     return jsonify({
         'id': d.id,
         'location': d.location,
-        'flood_detected': d.flood_detected,
+        'flood_detected': d.flood_detected,  # Changed from 'leak_detected' to 'flood_detected'
         'timestamp': d.timestamp.isoformat()
-
     })
 
 if __name__ == '__main__':

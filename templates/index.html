@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SensorHub - Environmental Monitoring</title>
+    <title>SensorHub - Flood Monitoring</title>
+
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link
       rel="stylesheet"
@@ -188,11 +189,12 @@
     <div class="grid md:grid-cols-2 gap-8 items-center">
       <div class="fade-in">
         <h1 class="text-4xl md:text-5xl font-bold mb-4">
-          Real-time Water Leakage Monitoring
-        </h1>
-        <p class="text-xl text-blue-100 mb-8">
-          Detect leaks instantly and protect your property with our smart water leakage monitoring system.
-        </p>
+  Real-time Flood Monitoring
+</h1>
+<p class="text-xl text-blue-100 mb-8">
+  Monitor flood risk instantly and safeguard your environment with our smart flood monitoring system.
+</p>
+
         <div class="flex flex-wrap gap-4">
           <a
             href="/dashboard"
@@ -213,13 +215,14 @@
         <div class="absolute w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div class="absolute w-64 h-64 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
-        <!-- Live Leak Card -->
+        <!-- Live flood Card -->
         <div class="relative">
           <div class="bg-white p-6 rounded-2xl shadow-xl fade-in animate-delay-200">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-800">
-                Leak Detection Status
-              </h3>
+             <h3 class="text-lg font-semibold text-gray-800">
+  Flood Detection Status
+</h3>
+
               <div class="flex items-center">
                 <span id="statusIndicator" class="h-2 w-2 rounded-full bg-green-500 mr-2 pulse"></span>
                 <span class="text-xs text-gray-500">Live</span>
@@ -229,7 +232,7 @@
             <!-- Loading State -->
             <div id="loadingState" class="py-8 flex flex-col items-center">
               <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p class="text-gray-500 loading-dots">Fetching leak data</p>
+              <p class="text-gray-500 loading-dots">Fetching flood data</p>
             </div>
 
             <!-- Live Data State -->
@@ -238,15 +241,15 @@
                 <div class="text-sm text-gray-500 mb-1">Location</div>
                 <div class="flex items-center text-lg font-semibold text-gray-700">
                   <i class="fas fa-map-marker-alt text-indigo-500 mr-2"></i>
-                  <span id="leakLocation">--</span>
+                  <span id="floodLocation">--</span>
                 </div>
               </div>
 
               <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                <div class="text-sm text-gray-500 mb-1">Leak Status</div>
+                <div class="text-sm text-gray-500 mb-1">flood Status</div>
                 <div class="flex items-center">
                   <i class="fas fa-water text-blue-500 mr-2"></i>
-                  <span id="leakStatus" class="text-2xl font-bold text-gray-800">--</span>
+                  <span id="floodStatus" class="text-2xl font-bold text-gray-800">--</span>
                 </div>
               </div>
 
@@ -267,10 +270,10 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12 fade-in">
       <h2 class="text-3xl font-bold text-gray-900 mb-4">
-        Live Water Leakage Data
+        Live Floods Data
       </h2>
       <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-        Monitor potential leaks in real-time with our intelligent detection system.
+        Monitor potential floods in real-time with our intelligent detection system.
       </p>
     </div>
 
@@ -279,10 +282,10 @@
       class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 p-6 fade-in animate-delay-400"
     >
       <h3 class="text-lg font-semibold text-gray-800 mb-4">
-        Leakage Trends
+        Flood Trends
       </h3>
       <div class="h-80">
-        <canvas id="leakHistoryChart"></canvas>
+        <canvas id="leakHistoryChart" width="400" height="200"></canvas>
       </div>
     </div>
   </div>
@@ -295,7 +298,7 @@
     <div class="text-center mb-12 fade-in">
       <h2 class="text-3xl font-bold text-gray-900 mb-4">Key Features</h2>
       <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-        Our intelligent water leakage monitoring system helps you detect and respond to plumbing issues in real time.
+        Our intelligent water floodage monitoring system helps you detect and respond to plumbing issues in real time.
       </p>
     </div>
 
@@ -305,9 +308,9 @@
         <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
           <i class="fas fa-chart-line text-indigo-600 text-xl"></i>
         </div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">Real-time Leak Detection</h3>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Real-time Flood Detection</h3>
         <p class="text-gray-600">
-          Continuously monitor water flow and pressure to instantly detect leaks and irregularities.
+          Continuously monitor flood flow and pressure to instantly detect floods and irregularities.
         </p>
       </div>
 
@@ -318,7 +321,7 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-800 mb-2">Instant Alerts & Notifications</h3>
         <p class="text-gray-600">
-          Get notified immediately via SMS or email when a potential leak is detected.
+          Get notified immediately via SMS or email when a potential flood is detected.
         </p>
       </div>
 
@@ -329,7 +332,7 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-800 mb-2">Historical Water Usage</h3>
         <p class="text-gray-600">
-          Analyze water usage and leak history to identify trends and potential problem areas.
+          Analyze water usage and flood history to identify trends and potential problem areas.
         </p>
       </div>
 
@@ -340,7 +343,7 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-800 mb-2">Remote Monitoring</h3>
         <p class="text-gray-600">
-          Access your leak detection dashboard from any device, anytime, anywhere.
+          Access your flood detection dashboard from any device, anytime, anywhere.
         </p>
       </div>
 
@@ -362,7 +365,7 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-800 mb-2">Data Export & Reports</h3>
         <p class="text-gray-600">
-          Export leak logs and water usage data for further analysis or compliance reporting.
+          Export flood logs and flood data for further analysis or compliance reporting.
         </p>
       </div>
     </div>
@@ -374,18 +377,18 @@
 <section class="py-16 bg-indigo-600 text-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
     <h2 class="text-3xl font-bold mb-4 fade-in">
-      Concerned about water leaks?
+      Concerned about flood?
     </h2>
     <p
       class="text-xl text-indigo-100 mb-8 max-w-3xl mx-auto fade-in animate-delay-100"
     >
-      Take control with our advanced water leakage monitoring system and prevent costly damage before it happens.
+      Take control with our advanced flood monitoring system and prevent costly damage before it happens.
     </p>
     <a
       href="/dashboard"
       class="inline-block bg-white text-indigo-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-medium shadow-lg transition-colors duration-300 fade-in animate-delay-200"
     >
-      View Leak Dashboard
+      View Flood Dashboard
     </a>
   </div>
 </section>
