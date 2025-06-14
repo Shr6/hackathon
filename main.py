@@ -8,41 +8,43 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///leakage_data.db'
 db = SQLAlchemy(app)
 
 
-class LeakageData(db.Model):
+class FloodData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     location = db.Column(db.String(50))
-    leak_detected = db.Column(db.Boolean)
+    flood_detected = db.Column(db.Boolean)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 def generate_dummy_data():
-    if LeakageData.query.count() == 0:
+    if FloodData.query.count() == 0:
         now = datetime.now()
         timestamps = [now - timedelta(minutes=i*5) for i in range(100)]
-        locations = ['Kitchen', 'Bathroom', 'Basement', 'Living Room']
+        locations = ['Basement', 'Street', 'Garage', 'Backyard']
 
         for i in range(100):
-            data = LeakageData(
+            data = FloodData(
                 location=random.choice(locations),
-                leak_detected=random.choice([True, False, False, False]),  # more False to simulate rare leaks
+                flood_detected=random.choice([True, False, False, False]),
                 timestamp=timestamps[i]
             )
             db.session.add(data)
         db.session.commit()
-        print("✅ Dummy water leakage data inserted")
+        print("✅ Dummy flood detection data inserted")
+
 
 @app.route('/')
 def index():
-    data = LeakageData.query.order_by(LeakageData.timestamp.desc()).all()
+    data = FloodData.query.order_by(FloodData.timestamp.desc()).all()
     return render_template("index.html", data=data)
 
 @app.route('/dashboard')
 def dashboard():
-    data = LeakageData.query.order_by(LeakageData.timestamp.desc()).all()
+    data = FloodData.query.order_by(FloodData.timestamp.desc()).all()
     return render_template("dashboard.html", data=data)
 
 @app.route('/api/all')
 def all_data():
-    data = LeakageData.query.order_by(LeakageData.id.desc()).all()
+    data = FloodData.query.order_by(FloodData.id.desc()).all()
     return jsonify([
         {
             'id': d.id,
@@ -54,14 +56,15 @@ def all_data():
 
 @app.route('/api/latest')
 def latest_data():
-    d = LeakageData.query.order_by(LeakageData.id.desc()).first()
+    d = FloodData.query.order_by(FloodData.id.desc()).first()
     if not d:
         return jsonify({'error': 'No data available'})
     return jsonify({
         'id': d.id,
         'location': d.location,
-        'leak_detected': d.leak_detected,
+        'flood_detected': d.flood_detected,
         'timestamp': d.timestamp.isoformat()
+
     })
 
 if __name__ == '__main__':
