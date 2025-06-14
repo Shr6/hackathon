@@ -2,9 +2,6 @@ from flask import Flask, render_template, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import random
-import serial
-import time
-from threading import Thread
 
 
 
